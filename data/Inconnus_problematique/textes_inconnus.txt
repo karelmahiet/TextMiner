@@ -1,0 +1,6 @@
+Gen_text_sol_1.txt
+Gen_text_sol_2.txt
+Gen_text_sol_3.txt
+Gen_text_sol_4.txt
+Gen_text_sol_5.txt
+Gen_text_sol_6.txt
