@@ -59,7 +59,7 @@ class TextAn(TextAnCommon):
     """
 
     # Signes de ponctuation à traiter comme des mots (compléter cette liste incomplète)
-    PONC = ["!", ";"]
+    PONC = ["!", ";","?",":","."]
 
     # Ajouter les structures de données et les fonctions nécessaires à l'analyse des textes,
     # la production de textes aléatoires, la détection d'oeuvres inconnues,
@@ -83,10 +83,10 @@ class TextAn(TextAnCommon):
 
         Copyright 2024-2025, F. Mailhot et Université de Sherbrooke
         """
-        # Les lignes qui suivent ne servent qu'à éliminer un avertissement.
-        # Il faut les retirer et les remplacer par du code fonctionnel
-        print(dict_de_ngrams)
-        taille = 1.0
+        taille = len(dict_de_ngrams)
+
+
+
         return taille
 
     def normalize_vector(self, dict_de_ngrams: dict) -> dict:
@@ -100,11 +100,17 @@ class TextAn(TextAnCommon):
 
         Copyright 2024-2025, F. Mailhot et Université de Sherbrooke
         """
-        # Les lignes qui suivent ne servent qu'à éliminer un avertissement.
-        # Il faut les retirer et les remplacer par du code fonctionnel
-        print(self.ngram_size)
-        print(dict_de_ngrams)
+        #calcule norme
+        norm = math.sqrt(sum(value ** 2 for value in dict_de_ngrams.values()))
+
+        #nouveau dict normalise
         norm_dict = {}
+        for k, v in dict_de_ngrams.items():
+            if norm !=0:
+                norm_dict[k] = v / norm
+            else:
+                norm_dict[k] = 0.0 #si norme=0, normale=0
+
         return norm_dict
 
     @staticmethod
@@ -121,11 +127,10 @@ class TextAn(TextAnCommon):
 
         Copyright 2025, F. Mailhot et Université de Sherbrooke
         """
-        # Les lignes qui suivent ne servent qu'à éliminer un avertissement.
-        # Il faut les retirer et les remplacer par du code fonctionnel
+
         sum_dict = {}
-        print(dict1)
-        print(dict2)
+        for k in dict1:
+            sum_dict[k] = dict1[k] + dict2[k]
         return sum_dict
 
     @staticmethod
@@ -143,10 +148,10 @@ class TextAn(TextAnCommon):
         Copyright 2024-2025, F. Mailhot et Université de Sherbrooke
         """
 
-        # Les lignes qui suivent ne servent qu'à éliminer un avertissement.
-        # Il faut les retirer et les remplacer par du code fonctionnel
-        print("\t", dict1, dict2)
-        dot_product = 1.0
+        dot_product = 0.0  # Initialisation à 0.0, car nous allons additionner les produits
+        for key, value in dict1.items():
+            if key in dict2:  # Assurez-vous que la clé est présente dans dict2
+                dot_product += value * dict2[key]
         return dot_product
 
     def find_author(self, oeuvre: str) -> []:
@@ -161,34 +166,39 @@ class TextAn(TextAnCommon):
             resultats (Liste[(string, float)]) : Liste de tuples (auteurs, niveau de proximité),
             où la proximité est un nombre entre 0 et 1)
         """
-        # La ligne suivante ne sert qu'à éliminer un avertissement.
-        # Il faut la retirer lorsque le code est complété
-        print("\tAuteurs: ", self.auteurs, "\n\tOeuvre: ", oeuvre)
+        mots = open(oeuvre,"r", encoding="utf-8").read().split()
+        ngram_frequencies = {}
 
-        # Exemple du format des sorties
-        resultats = [
-            ("Premier_auteur", 0.1234),
-            ("Deuxième_auteur", 0.1123),
-        ]
+        for i in range(len(mots) - self.ngram_size + 1):
+            ngram = " ".join(mots[i:i + self.ngram_size])
+            ngram_frequencies[ngram] = ngram_frequencies.get(ngram, 0) + 1
 
-        # Exemple de lecture du fichier oeuvre une ligne à la fois.  Modifier ou remplacer ce code par le vôtre.
-        fichier_oeuvre = open(oeuvre, "r", encoding="utf8")
-        lignes = fichier_oeuvre.readlines()
-        plus_grande_ligne = ""
-        for ligne in lignes:
-            if len(ligne) > len(plus_grande_ligne):
-                plus_grande_ligne = ligne
-        print("\tPlus grande ligne: ", plus_grande_ligne.strip())
+        #normaliser vecteur
+        norm_oeuvre = self.normalize_vector(ngram_frequencies)
 
-        # Ajouter votre code pour déterminer la proximité du fichier passé en paramètre avec chacun des auteurs
-        # Retourner la liste des auteurs, chacun avec sa proximité au fichier inconnu
-        # Plus la proximité est grande, plus proche l'oeuvre inconnue est des autres écrits d'un auteur
-        #   Le produit scalaire entre le vecteur représentant les oeuvres d'un auteur
-        #       et celui associé au texte inconnu pourrait s'avérer intéressant...
-        #   Le produit scalaire doit être normalisé avec la taille du vecteur associé au texte inconnu :
-        #   proximité = (A dot product B) / (|A| |B|)   où A est le vecteur du texte inconnu et B est celui d'un auteur,
-        #           "dot product" est le produit scalaire, et |X| est la norme (longueur) du vecteur X.
-        #   Ainsi, le produit scalaire normalisé représente le cosinus de l'angle (oeuvre/auteur)
+        #liste de score de similarite
+        resultats = []
+
+        #comparer avec auteur connu
+        for auteur, profile in self.ngrams_auteurs.items():
+            #norm
+            norm_auteur = self.normalize_vector(profile)
+
+            #produit scalaire
+            dot_product = self.dot_product_dict(norm_oeuvre, norm_auteur)
+
+            #norme des deux
+            norm_oeuvre_size = math.sqrt(sum(value ** 2 for value in norm_oeuvre.values()))
+            norm_auteur_size = math.sqrt(sum(value ** 2 for value in norm_auteur.values()))
+
+            #similarite cosinus
+            if norm_oeuvre_size == 0 or norm_auteur_size == 0:
+                similarity = 0
+            else:
+                similarity = dot_product / norm_oeuvre_size
+
+            #add result a la liste
+            resultats.append((auteur, similarity))
 
         return resultats
 
@@ -204,10 +214,15 @@ class TextAn(TextAnCommon):
 
         Copyright 2024-2025, F. Mailhot et Université de Sherbrooke
         """
-        # Les lignes qui suivent ne servent qu'à éliminer un avertissement.
-        # Il faut les retirer et les remplacer par du code fonctionnel
-        print("\t", self.ngram_size, auteur, ngram)
-        return 0
+        tmp_str = ""
+        for string in ngram:
+                tmp_str = " ".join(string)
+
+        occurences = 0
+        for k in self.ngrams_auteurs[auteur]:
+            if tmp_str.__contains__(k):
+                occurences += 1
+        return occurences
 
     def get_total_occurrences(self, auteur: str) -> int:
         """Retourne le nombre total d'occurrences de n-grammes pour cet auteur
@@ -224,10 +239,8 @@ class TextAn(TextAnCommon):
 
         Copyright 2024-2025, F. Mailhot et Université de Sherbrooke
         """
-        # Les lignes qui suivent ne servent qu'à éliminer un avertissement.
-        # Il faut les retirer et les remplacer par du code fonctionnel
-        print("\t", self.ngram_size, auteur)
-        return 1
+
+        return len(self.ngrams_auteurs[auteur])
 
     def gen_text_dict(self, auteur_dict: dict, taille: int, to_file: io.TextIOWrapper) -> None:
         """Après analyse des textes d'auteurs connus, produire un texte selon des statistiques d'un dictionnaire
@@ -240,10 +253,95 @@ class TextAn(TextAnCommon):
         Returns :
             void : ne retourne rien, le texte produit doit être écrit dans le fichier fourni
         """
-        # Les lignes qui suivent ne servent qu'à éliminer un avertissement.
-        # Il faut les retirer et les remplacer par du code fonctionnel
-        print(self.ngram_size, auteur_dict, taille, file=to_file)
-        return
+        # #dict en liste ngram
+        # ngrams = list(auteur_dict.keys())
+        # frequencies = list(auteur_dict.values())
+        #
+        # #norm freq pour prob
+        # total_frequencies = sum(frequencies)
+        # probabilites = [freq / total_frequencies for freq in frequencies]
+        #
+        # #generer le texte
+        # generated_text = []
+        # current_ngram = random.choices(ngrams, weights=probabilites, k=1)[0]
+        # generated_text.extend(current_ngram.split())
+        #
+        # while len(generated_text) < taille:
+        #     prefix = " ".join(generated_text[- (self.ngram_size - 1):])
+        #     possible_ngrams = [ngram for ngram in ngrams if ngram.startswith(prefix)]
+        #
+        #     if not possible_ngrams:
+        #         #si rien correspond, aleatoire
+        #         current_ngram = random.choices(ngrams, weights=probabilites, k=1)[0]
+        #     else:
+        #         possible_frequencies = [auteur_dict[ngram] for ngram in possible_ngrams]
+        #         current_ngram = random.choices(possible_ngrams, weights=possible_frequencies, k=1)[0]
+        #
+        #     #add dernier mot du ngram
+        #     generated_text.append(current_ngram.split()[-1])
+        #
+        # #write dans fichier
+        # to_file.write("\n".join(generated_text[:taille]))
+
+        """Génère un texte aléatoire basé sur les statistiques d'un dictionnaire de n-grammes."""
+        # Convertir le dictionnaire en liste de n-grammes et de fréquences
+        ngrams = list(auteur_dict.keys())
+        frequencies = list(auteur_dict.values())
+
+        # Vérifier que les listes ne sont pas vides et ont la même longueur
+        if not ngrams or not frequencies or len(ngrams) != len(frequencies):
+            raise ValueError("Les listes de n-grammes et de fréquences doivent être non vides et de même longueur.")
+
+        # Normaliser les fréquences pour en faire des probabilités
+        total_frequencies = sum(frequencies)
+        if total_frequencies <= 0:
+            raise ValueError("La somme des fréquences doit être supérieure à zéro.")
+        probabilites = [freq / total_frequencies for freq in frequencies]
+
+        # Créer un dictionnaire inversé pour les préfixes
+        prefix_dict = {}
+        for ngram in ngrams:
+            prefix = " ".join(ngram.split()[:-1])
+            if prefix not in prefix_dict:
+                prefix_dict[prefix] = []
+            prefix_dict[prefix].append(ngram)
+
+        # Générer le texte
+        generated_text = []
+        try:
+            current_ngram = random.choices(ngrams, weights=probabilites, k=1)[0]
+            generated_text.extend(current_ngram.split())
+        except ValueError as e:
+            print(f"Erreur lors de la sélection aléatoire d'un n-gramme : {e}")
+            return
+
+        while len(generated_text) < taille:
+            prefix = " ".join(generated_text[-(self.ngram_size - 1):])
+            possible_ngrams = prefix_dict.get(prefix, [])
+
+            if not possible_ngrams:
+                # Si aucun n-gramme ne correspond, choisir un n-gramme aléatoire
+                try:
+                    current_ngram = random.choices(ngrams, weights=probabilites, k=1)[0]
+                except ValueError as e:
+                    print(f"Erreur lors de la sélection aléatoire d'un n-gramme : {e}")
+                    return
+            else:
+                possible_frequencies = [auteur_dict[ngram] for ngram in possible_ngrams]
+                try:
+                    current_ngram = random.choices(possible_ngrams, weights=possible_frequencies, k=1)[0]
+                except ValueError as e:
+                    print(f"Erreur lors de la sélection aléatoire d'un n-gramme : {e}")
+                    return
+
+            # Ajouter le dernier mot du n-gramme choisi au texte généré
+            generated_text.append(current_ngram.split()[-1])
+
+        tempstring = " ".join(generated_text[:taille]).encode("utf-8")
+
+        to_file.write(tempstring.__str__())
+
+
 
     def get_kth_element(self, auteur: str, k: int) -> [[str]]:
         """Après analyse des textes d'auteurs connus, retourner la liste des k-ièmes plus fréquents
@@ -258,11 +356,31 @@ class TextAn(TextAnCommon):
             ngram (List[Liste[string]]) : Liste de listes de mots composant le n-gramme recherché
             (il est possible qu'il y ait plus d'un n-gramme au même rang)
         """
-        # Les lignes suivantes ne servent qu'à éliminer un avertissement.
-        # Il faut les retirer lorsque le code est complété
-        print("\t", self.auteurs, auteur, k)
-        ngram = [["un", "roman"], ["le", "lac"], ["code", "est"]]  # Exemple du format de sortie pour trois bigrammes
-        return ngram
+        #check si auteur existe
+        if auteur not in self.ngrams_auteurs:
+            return []
+
+        #recupere dict ngram auteur
+        ngram_dict = self.ngrams_auteurs[auteur]
+
+        #trier par freq decroissante
+        sorted_ngrams = sorted(ngram_dict.items(), key=lambda x: x[1], reverse=True)
+
+        #trier au k ieme rang
+        if k < 1 or k > len(sorted_ngrams):
+            return []
+
+        #get freq du k ieme ngram
+        kth_frequency = sorted_ngrams[k-1][1]
+        normFreq = (kth_frequency / (sum(ngram_dict.values())))
+
+        #find ngram meme freq
+        kth_ngrams = [ngram for ngram, freq in sorted_ngrams if freq == kth_frequency]
+
+        #convert ngram en liste mots
+        result = [ngram.split() for ngram in kth_ngrams]
+
+        return result, kth_frequency, normFreq
 
     def analyze(self) -> None:
         """Fait l'analyse des textes fournis, en traitant chaque oeuvre de chaque auteur
@@ -274,42 +392,24 @@ class TextAn(TextAnCommon):
             void : ne retourne rien, toute l'information extraite est conservée dans des structures internes
         """
 
-        # Ajouter votre code ici pour traiter l'ensemble des oeuvres de l'ensemble des auteurs
-        # Pour l'analyse :  faire le calcul des occurrences de n-grammes pour l'ensemble des oeuvres
-        #   d'un certain auteur, sans distinction des oeuvres individuelles,
-        #       et recommencer ce calcul pour chacun des auteurs
-        #   En procédant ainsi, les oeuvres comprenant plus de mots auront un impact plus grand sur
-        #   les statistiques globales d'un auteur.
-        # Il serait possible de considérer que chacune des oeuvres d'un auteur ont un poids identique.
-        #   Pour ce faire, il faudrait faire les calculs des occurrences pour chacune des oeuvres
-        #       de façon indépendante, pour ensuite les normaliser,
-        #       avant de les additionner pour obtenir le vecteur complet d'un auteur
-        #   De cette façon, les mots d'un court poème auraient une importance beaucoup plus grande que
-        #   les mots d'une très longue oeuvre du même auteur. Ce n'est PAS ce qui vous est demandé ici.
-        #
-        # Pour chaque auteur, créer un dictionnaire contenant :
-        #       les ngrammes comme clé
-        #       le nombre d'occurrences comme valeur
-        #   Le dictionnaire de chacun des auteurs doit être ajouté à self.ngrams_auteurs, avec l'auteur comme clé
-
-        # Ces trois lignes ne servent qu'à éliminer un avertissement. Il faut les retirer lorsque le code est complété
-        ngram = self.get_empty_ngram(2)
-        print("\t", ngram)
-        print("\t", self.auteurs)
-
-        # Le code qui suit indique comment accéder aux noms des fichiers qui contiennent les oeuvres des auteurs.
-        # Vous pouvez l'adapter pour effectuer l'analyse
-        # for auteur in self.auteurs:
-        #     for oeuvre in self.auteurs[auteur]:
-        #         print(oeuvre)
-        # Pour chacun des auteurs, on devrait obtenir :
-        #   self.mots_auteurs[auteur] = vecteur de n-grammes avec leur nombre d'occurrences
-        #   self.normalized_mots_auteurs[auteur] = vecteur normalisé de n-grammes normalisés.
-
         for auteur in self.auteurs:
             oeuvres = self.get_aut_files(auteur)
+            ngram_comptes = {}
+
             for oeuvre in oeuvres:
-                print("\t", oeuvre)
+                try:
+                    with open(oeuvre, "r", encoding="utf-8") as f:
+                        texte = f.read().split()
+                        for i in range(len(texte) - self.ngram_size + 1):
+                            ngram = ' '.join(texte[i:i + self.ngram_size])
+                            if ngram in ngram_comptes:
+                                ngram_comptes[ngram] += 1
+                            else:
+                                ngram_comptes[ngram] = 1
+                except FileNotFoundError:
+                    print(f"Fichier non trouvé: {oeuvre}")
+
+            self.ngrams_auteurs[auteur] = ngram_comptes
         return
 
     def __init__(self) -> None:
@@ -326,5 +426,7 @@ class TextAn(TextAnCommon):
         super().__init__()
 
         # Au besoin, ajouter votre code d'initialisation de l'objet de type TextAn lors de sa création
+
+
 
         return
