@@ -28,8 +28,8 @@
     Copyright 2018-2025, F. Mailhot et Université de Sherbrooke
 """
 import io
-# import math  # Au besoin, retirer le commentaire de cette ligne
-# import random # Au besoin, retirer le commentaire de cette ligne
+import math  # Au besoin, retirer le commentaire de cette ligne
+import random # Au besoin, retirer le commentaire de cette ligne
 from textan_common import TextAnCommon
 
 
