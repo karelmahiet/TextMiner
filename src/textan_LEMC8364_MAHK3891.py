@@ -83,11 +83,7 @@ class TextAn(TextAnCommon):
 
         Copyright 2024-2025, F. Mailhot et Université de Sherbrooke
         """
-        taille = len(dict_de_ngrams)
-
-
-
-        return taille
+        return math.sqrt(sum(value ** 2 for value in dict_de_ngrams.values()))
 
     def normalize_vector(self, dict_de_ngrams: dict) -> dict:
         """Normalize le vecteur (dictionnaire), en divisant chaque occurrence par la taille totale
@@ -174,31 +170,31 @@ class TextAn(TextAnCommon):
             ngram_frequencies[ngram] = ngram_frequencies.get(ngram, 0) + 1
 
         #normaliser vecteur
-        norm_oeuvre = self.normalize_vector(ngram_frequencies)
+        oeuvre_normalisee = self.normalize_vector(ngram_frequencies)
 
         #liste de score de similarite
         resultats = []
 
         #comparer avec auteur connu
-        for auteur, profile in self.ngrams_auteurs.items():
-            #norm
-            norm_auteur = self.normalize_vector(profile)
+        for auteur, ngrams_auteur in self.ngrams_auteurs.items():
+            #norme
+            auteur_normalise = self.normalize_vector(ngrams_auteur)
 
             #produit scalaire
-            dot_product = self.dot_product_dict(norm_oeuvre, norm_auteur)
+            dot_product = self.dot_product_dict(oeuvre_normalisee, auteur_normalise)
 
             #norme des deux
-            norm_oeuvre_size = math.sqrt(sum(value ** 2 for value in norm_oeuvre.values()))
-            norm_auteur_size = math.sqrt(sum(value ** 2 for value in norm_auteur.values()))
+            norme_oeuvre = math.sqrt(sum(value ** 2 for value in oeuvre_normalisee.values()))
+            norme_auteur = math.sqrt(sum(value ** 2 for value in auteur_normalise.values()))
 
-            #similarite cosinus
-            if norm_oeuvre_size == 0 or norm_auteur_size == 0:
-                similarity = 0
+            #similarite
+            if norme_oeuvre == 0 or norme_auteur == 0:
+                similarite = 0
             else:
-                similarity = dot_product / norm_oeuvre_size
+                similarite = dot_product / norme_oeuvre * norme_auteur
 
             #add result a la liste
-            resultats.append((auteur, similarity))
+            resultats.append((auteur, similarite))
 
         return resultats
 
