@@ -148,10 +148,10 @@ class TextAn(TextAnCommon):
         Copyright 2024-2025, F. Mailhot et Université de Sherbrooke
         """
 
-        dot_product = 0.0  # Initialisation à 0.0, car nous allons additionner les produits
-        for key, value in dict1.items():
-            if key in dict2:  # Assurez-vous que la clé est présente dans dict2
-                dot_product += value * dict2[key]
+        dot_product = 0.0
+        for k, v in dict1.items():
+            if k in dict2:
+                dot_product += v * dict2[k]
         return dot_product
 
     def find_author(self, oeuvre: str) -> []:
@@ -253,52 +253,22 @@ class TextAn(TextAnCommon):
         Returns :
             void : ne retourne rien, le texte produit doit être écrit dans le fichier fourni
         """
-        # #dict en liste ngram
-        # ngrams = list(auteur_dict.keys())
-        # frequencies = list(auteur_dict.values())
-        #
-        # #norm freq pour prob
-        # total_frequencies = sum(frequencies)
-        # probabilites = [freq / total_frequencies for freq in frequencies]
-        #
-        # #generer le texte
-        # generated_text = []
-        # current_ngram = random.choices(ngrams, weights=probabilites, k=1)[0]
-        # generated_text.extend(current_ngram.split())
-        #
-        # while len(generated_text) < taille:
-        #     prefix = " ".join(generated_text[- (self.ngram_size - 1):])
-        #     possible_ngrams = [ngram for ngram in ngrams if ngram.startswith(prefix)]
-        #
-        #     if not possible_ngrams:
-        #         #si rien correspond, aleatoire
-        #         current_ngram = random.choices(ngrams, weights=probabilites, k=1)[0]
-        #     else:
-        #         possible_frequencies = [auteur_dict[ngram] for ngram in possible_ngrams]
-        #         current_ngram = random.choices(possible_ngrams, weights=possible_frequencies, k=1)[0]
-        #
-        #     #add dernier mot du ngram
-        #     generated_text.append(current_ngram.split()[-1])
-        #
-        # #write dans fichier
-        # to_file.write("\n".join(generated_text[:taille]))
 
         """Génère un texte aléatoire basé sur les statistiques d'un dictionnaire de n-grammes."""
-        # Convertir le dictionnaire en liste de n-grammes et de fréquences
+
         ngrams = list(auteur_dict.keys())
         frequencies = list(auteur_dict.values())
 
-        # Vérifier que les listes ne sont pas vides et ont la même longueur
         if not ngrams or not frequencies or len(ngrams) != len(frequencies):
             raise ValueError("Les listes de n-grammes et de fréquences doivent être non vides et de même longueur.")
 
-        # Normaliser les fréquences pour en faire des probabilités
+        #norm
         total_frequencies = sum(frequencies)
         if total_frequencies <= 0:
             raise ValueError("La somme des fréquences doit être supérieure à zéro.")
         probabilites = [freq / total_frequencies for freq in frequencies]
 
-        # Créer un dictionnaire inversé pour les préfixes
+        #dict inverse
         prefix_dict = {}
         for ngram in ngrams:
             prefix = " ".join(ngram.split()[:-1])
@@ -306,7 +276,6 @@ class TextAn(TextAnCommon):
                 prefix_dict[prefix] = []
             prefix_dict[prefix].append(ngram)
 
-        # Générer le texte
         generated_text = []
         try:
             current_ngram = random.choices(ngrams, weights=probabilites, k=1)[0]
@@ -320,7 +289,7 @@ class TextAn(TextAnCommon):
             possible_ngrams = prefix_dict.get(prefix, [])
 
             if not possible_ngrams:
-                # Si aucun n-gramme ne correspond, choisir un n-gramme aléatoire
+                #si aucun correspond
                 try:
                     current_ngram = random.choices(ngrams, weights=probabilites, k=1)[0]
                 except ValueError as e:
@@ -334,7 +303,7 @@ class TextAn(TextAnCommon):
                     print(f"Erreur lors de la sélection aléatoire d'un n-gramme : {e}")
                     return
 
-            # Ajouter le dernier mot du n-gramme choisi au texte généré
+            #dernier mot du ngram
             generated_text.append(current_ngram.split()[-1])
 
         tempstring = " ".join(generated_text[:taille]).encode("utf-8")
@@ -422,11 +391,6 @@ class TextAn(TextAnCommon):
             (void) : Ne fait qu'initialiser l'objet de type TextAn
         """
 
-        # Initialisation des champs nécessaires aux fonctions fournies
         super().__init__()
-
-        # Au besoin, ajouter votre code d'initialisation de l'objet de type TextAn lors de sa création
-
-
 
         return
