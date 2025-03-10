@@ -31,6 +31,7 @@ import io
 import math  # Au besoin, retirer le commentaire de cette ligne
 import random # Au besoin, retirer le commentaire de cette ligne
 from textan_common import TextAnCommon
+from handle_unicode_common import HandleUnicodeCommon
 
 
 class TextAn(TextAnCommon):
@@ -83,11 +84,7 @@ class TextAn(TextAnCommon):
 
         Copyright 2024-2025, F. Mailhot et Université de Sherbrooke
         """
-        taille = len(dict_de_ngrams)
-
-
-
-        return taille
+        return math.sqrt(sum(value ** 2 for value in dict_de_ngrams.values()))
 
     def normalize_vector(self, dict_de_ngrams: dict) -> dict:
         """Normalize le vecteur (dictionnaire), en divisant chaque occurrence par la taille totale
@@ -239,8 +236,11 @@ class TextAn(TextAnCommon):
 
         Copyright 2024-2025, F. Mailhot et Université de Sherbrooke
         """
-
-        return len(self.ngrams_auteurs[auteur])
+        occurences = 0
+        if auteur in self.ngrams_auteurs:
+            for ngram, count in self.ngrams_auteurs[auteur].items():
+                occurences += count
+        return occurences
 
     def gen_text_dict(self, auteur_dict: dict, taille: int, to_file: io.TextIOWrapper) -> None:
         """Après analyse des textes d'auteurs connus, produire un texte selon des statistiques d'un dictionnaire
@@ -255,7 +255,6 @@ class TextAn(TextAnCommon):
         """
 
         """Génère un texte aléatoire basé sur les statistiques d'un dictionnaire de n-grammes."""
-
         ngrams = list(auteur_dict.keys())
         frequencies = list(auteur_dict.values())
 
@@ -266,6 +265,7 @@ class TextAn(TextAnCommon):
         total_frequencies = sum(frequencies)
         if total_frequencies <= 0:
             raise ValueError("La somme des fréquences doit être supérieure à zéro.")
+
         probabilites = [freq / total_frequencies for freq in frequencies]
 
         #dict inverse
@@ -283,10 +283,19 @@ class TextAn(TextAnCommon):
         except ValueError as e:
             print(f"Erreur lors de la sélection aléatoire d'un n-gramme : {e}")
             return
-
+        prefix_size = self.ngram_size -1
         while len(generated_text) < taille:
-            prefix = " ".join(generated_text[-(self.ngram_size - 1):])
+            prefix = " ".join(generated_text[-(prefix_size):])
             possible_ngrams = prefix_dict.get(prefix, [])
+
+            if  prefix_size > 1 and not possible_ngrams :
+                prefix_size-=1
+                prefix = " ".join(generated_text[-(prefix_size):])
+                possible_ngrams = prefix_dict.get(prefix, [])
+            else:
+                prefix = " ".join(generated_text[-(prefix_size):])
+                possible_ngrams = prefix_dict.get(prefix, [])
+                prefix_size = self.ngram_size - 1
 
             if not possible_ngrams:
                 #si aucun correspond
@@ -306,9 +315,9 @@ class TextAn(TextAnCommon):
             #dernier mot du ngram
             generated_text.append(current_ngram.split()[-1])
 
-        tempstring = " ".join(generated_text[:taille]).encode("utf-8")
 
-        to_file.write(tempstring.__str__())
+        tempstring = " ".join(generated_text[:taille])
+        to_file.write(tempstring)
 
 
 
@@ -367,8 +376,8 @@ class TextAn(TextAnCommon):
 
             for oeuvre in oeuvres:
                 try:
-                    with open(oeuvre, "r", encoding="utf-8") as f:
-                        texte = f.read().split()
+                    with open(oeuvre, "r", encoding="utf8") as f:
+                        texte =  HandleUnicodeCommon.normalize_string(f.read()).split()
                         for i in range(len(texte) - self.ngram_size + 1):
                             ngram = ' '.join(texte[i:i + self.ngram_size])
                             if ngram in ngram_comptes:
