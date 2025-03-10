@@ -35,8 +35,9 @@ class ParsingClassTextAn:
         Returns :
             void : Au retour, toutes les commandes reconnues sont comprises dans self.args
         """
+        config_file_path = os.path.join(os.path.curdir, "test_textan_config.yml")
         parser = configargparse.ArgParser(
-            default_config_files=["./test_textan_config.yml"],
+            default_config_files=[config_file_path],
             prog="test_textan.py"
         )
 
@@ -508,8 +509,8 @@ class ParsingClassTextAn:
         # Ces champs peuvent ensuite être modifiés
         #       par le fichier de configuration
         #       par la ligne de commande
-        self.dir = "."
-        self.dir_code = "."
+        self.dir = "../../download"
+        self.dir_code = "../../download"
         self.liste_auteurs_pour_generation = ""
         self.auteur_unique_pour_generation = ""
         self.liste_auteurs_pour_generation_commune = ""
@@ -523,13 +524,13 @@ class ParsingClassTextAn:
 
         self.fichier_res = ""
         self.dir_res = ""
-        self.dir_res_path = "."
+        self.dir_res_path = "../../download"
 
         self.gen_size = 0
         self.g_name = "Gen_text_<CIP>_<AUT>_<DATE>.<HR>.<MIN>.<SEC>.txt"
-        self.g_dir = "."
+        self.g_dir = "../../download"
         self.rep_code = "."
-        self.f_dir = "."
+        self.f_dir = "../../download"
 
         self.do_find_author = False
         self.do_analyze = False

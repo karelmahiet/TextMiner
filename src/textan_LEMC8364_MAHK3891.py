@@ -306,9 +306,9 @@ class TextAn(TextAnCommon):
             #dernier mot du ngram
             generated_text.append(current_ngram.split()[-1])
 
-        tempstring = " ".join(generated_text[:taille]).encode("utf-8")
+        tempstring = " ".join(generated_text[:taille])
 
-        to_file.write(tempstring.__str__())
+        to_file.write(tempstring)
 
 
 
@@ -367,7 +367,7 @@ class TextAn(TextAnCommon):
 
             for oeuvre in oeuvres:
                 try:
-                    with open(oeuvre, "r", encoding="utf-8") as f:
+                    with open(oeuvre, "r") as f:
                         texte = f.read().split()
                         for i in range(len(texte) - self.ngram_size + 1):
                             ngram = ' '.join(texte[i:i + self.ngram_size])
